@@ -40,7 +40,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # What we going to do is
 
 1. Create a basic react/nextjs application
-2. Implement this function
+2. Connect our wallet, with a nicer connect application
+3. Implement this function
 
 ```javascript
     function airdropERC20(
@@ -54,4 +55,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 [address(a), address(b), address(c)]
 [100, 200, 300]
 
-3. Deploy to fleek
+4. Deploy to fleek
