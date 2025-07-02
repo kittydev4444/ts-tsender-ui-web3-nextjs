@@ -52,4 +52,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ```
 
 [address(a), address(b), address(c)]
-[100, 200, 300] 3. Deploy to fleek
+[100, 200, 300]
+
+3. Deploy to fleek
