@@ -16,8 +16,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <Header />
-          {children}
+          <div className="flex h-screen w-screen justify-center">
+            <div className="flex w-full max-w-10/12 flex-col items-center">
+              <Header />
+              {children}
+            </div>
+          </div>
         </Providers>
       </body>
     </html>
