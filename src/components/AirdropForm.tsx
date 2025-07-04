@@ -5,7 +5,7 @@ import { readContract, waitForTransactionReceipt } from "@wagmi/core"
 import { useEffect, useMemo, useState } from "react"
 import { CgSpinner } from "react-icons/cg"
 
-import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { RiAlertFill, RiInformationLine } from "react-icons/ri"
 import {
   useAccount,
   useChainId,
@@ -15,6 +15,7 @@ import {
   useWriteContract,
 } from "wagmi"
 import InputField from "./ui/InputField"
+import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs"
 
 type AirdropFormProps = {
   isUnsafeMode: boolean
@@ -34,7 +35,7 @@ export default function AirdropForm({
   const [hasEnoughTokens, setHasEnoughTokens] = useState(true)
   const chainId = useChainId()
   const config = useConfig()
-  const { address, isConnected } = useAccount()
+  const { address } = useAccount()
   const { data: tokenData } = useReadContracts({
     contracts: [
       {
@@ -69,7 +70,6 @@ export default function AirdropForm({
     confirmations: 1,
     hash,
   })
-  const { openConnectModal } = useConnectModal()
 
   const total: number = useMemo(() => calculateTotal(amounts), [amounts])
 
@@ -92,11 +92,13 @@ export default function AirdropForm({
   }
 
   async function handleSubmit() {
-    const tSenderAddress = chainsToTSender[chainId]["tsender"]
-    const approvedAmount = await getApprovedAmount(tSenderAddress)
-    console.log(approvedAmount)
+    const contractType = isUnsafeMode ? "no_check" : "tsender"
 
-    if (approvedAmount < total) {
+    const tSenderAddress = chainsToTSender[chainId][contractType]
+    const result = await getApprovedAmount(tSenderAddress)
+    console.log(result)
+
+    if (result < total) {
       const approvalHash = await writeContractAsync({
         abi: erc20Abi,
         address: tokenAddress as `0x${string}`,
@@ -161,7 +163,7 @@ export default function AirdropForm({
       console.log("confirmed")
       return "Transaction confirmed."
     }
-    // return isUnsafeMode ? "Send Tokens (Unsafe)" : "Send Tokens"
+    return isUnsafeMode ? "Send Tokens (Unsafe)" : "Send Tokens"
   }
 
   useEffect(() => {
@@ -187,51 +189,92 @@ export default function AirdropForm({
   }, [tokenAddress, total, tokenData])
 
   return (
-    <div className="mt-10 w-full">
-      <InputField
-        label="Token Address"
-        placeholder="0x"
-        value={tokenAddress}
-        onChange={(e) => setTokenAddress(e.target.value)}
-      />
-      <InputField
-        label="Recipients"
-        placeholder="0x1234,0x343553"
-        value={recipients}
-        large
-        onChange={(e) => setRecipients(e.target.value)}
-      />
-      <InputField
-        label="Amount"
-        placeholder="100, 200, 300"
-        value={amounts}
-        large
-        onChange={(e) => setAmounts(e.target.value)}
-      />
+    <div
+      className={`mt-10 flex w-full max-w-2xl min-w-full flex-col gap-6 rounded-xl border-2 bg-white p-6 ring-[4px] lg:mx-auto xl:min-w-lg ${isUnsafeMode ? "border-red-500 ring-red-500/25" : "border-blue-500 ring-blue-500/25"}`}
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-zinc-900">T-Sender</h2>
+        <Tabs defaultValue={"false"}>
+          <TabsList>
+            <TabsTrigger value={"false"} onClick={() => onModeChange(false)}>
+              Safe Mode
+            </TabsTrigger>
+            <TabsTrigger value={"true"} onClick={() => onModeChange(true)}>
+              Unsafe Mode
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      <div className="space-y-6">
+        <InputField
+          label="Token Address"
+          placeholder="0x"
+          value={tokenAddress}
+          onChange={(e) => setTokenAddress(e.target.value)}
+        />
+        <InputField
+          label="Recipients"
+          placeholder="0x1234,0x343553"
+          value={recipients}
+          large
+          onChange={(e) => setRecipients(e.target.value)}
+        />
+        <InputField
+          label="Amount"
+          placeholder="100, 200, 300"
+          value={amounts}
+          large
+          onChange={(e) => setAmounts(e.target.value)}
+        />
 
-      <button
-        className={`relative mt-4 flex w-full cursor-pointer items-center justify-center rounded-[9px] border py-3 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-400 ${
-          isUnsafeMode
-            ? "border-red-500 bg-red-500 hover:bg-red-600"
-            : "bg-blue-500 hover:bg-blue-600"
-        } ${!hasEnoughTokens && tokenAddress ? "cursor-not-allowed opacity-50" : ""}`}
-        onClick={handleSubmit}
-        disabled={
-          tokenAddress === "" ||
-          recipients === "" ||
-          amounts === "" ||
-          isPending ||
-          (!hasEnoughTokens && tokenAddress !== "")
-        }
-      >
-        {isPending || error || isConfirming
-          ? getButtonContent()
-          : !hasEnoughTokens && tokenAddress
-            ? "Insufficient token balance"
-            : isUnsafeMode
-              ? "Send Tokens (Unsafe)"
-              : "Send Tokens"}
-      </button>
+        {isUnsafeMode && (
+          <div className="mb-4 flex items-center justify-between rounded-lg bg-red-50 p-4 text-red-600">
+            <div className="flex items-center gap-3">
+              <RiAlertFill size={20} />
+              <span>
+                Using{" "}
+                <span className="font-medium underline decoration-red-300 decoration-2 underline-offset-2">
+                  unsafe
+                </span>{" "}
+                super gas optimized mode
+              </span>
+            </div>
+            <div className="group relative">
+              <RiInformationLine className="h-5 w-5 cursor-help opacity-45" />
+              <div className="invisible absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+                This mode skips certain safety checks to optimize for gas. Do
+                not use this mode unless you know how to verify the calldata of
+                your transaction.
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -translate-y-1 border-8 border-transparent border-t-zinc-900"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          className={`relative mt-4 flex w-full cursor-pointer items-center justify-center rounded-[9px] border py-3 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-400 ${
+            isUnsafeMode
+              ? "border-red-500 bg-red-500 hover:bg-red-600"
+              : "bg-blue-500 hover:bg-blue-600"
+          } ${!hasEnoughTokens && tokenAddress ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={handleSubmit}
+          disabled={
+            tokenAddress === "" ||
+            recipients === "" ||
+            amounts === "" ||
+            isPending ||
+            (!hasEnoughTokens && tokenAddress !== "")
+          }
+        >
+          {isPending || error || isConfirming
+            ? getButtonContent()
+            : !hasEnoughTokens && tokenAddress
+              ? "Insufficient token balance"
+              : isUnsafeMode
+                ? "Send Tokens (Unsafe)"
+                : "Send Tokens"}
+        </button>
+      </div>
     </div>
   )
 }
