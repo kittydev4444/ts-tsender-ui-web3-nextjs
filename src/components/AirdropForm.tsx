@@ -1,6 +1,6 @@
 "use client"
 import { chainsToTSender, erc20Abi, tsenderAbi } from "@/constants"
-import { calculateTotal } from "@/utils"
+import { calculateTotal, formatTokenAmount } from "@/utils"
 import { readContract, waitForTransactionReceipt } from "@wagmi/core"
 import { useEffect, useMemo, useState } from "react"
 import { CgSpinner } from "react-icons/cg"
@@ -190,7 +190,7 @@ export default function AirdropForm({
 
   return (
     <div
-      className={`mt-10 flex w-full max-w-2xl min-w-full flex-col gap-6 rounded-xl border-2 bg-white p-6 ring-[4px] lg:mx-auto xl:min-w-lg ${isUnsafeMode ? "border-red-500 ring-red-500/25" : "border-blue-500 ring-blue-500/25"}`}
+      className={`mt-5 flex h-fit w-full max-w-2xl min-w-full flex-col gap-6 rounded-xl border-2 bg-white p-6 ring-[4px] lg:mx-auto xl:min-w-lg ${isUnsafeMode ? "border-red-500 ring-red-500/25" : "border-blue-500 ring-blue-500/25"}`}
     >
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-zinc-900">T-Sender</h2>
@@ -205,7 +205,7 @@ export default function AirdropForm({
           </TabsList>
         </Tabs>
       </div>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <InputField
           label="Token Address"
           placeholder="0x"
@@ -226,6 +226,30 @@ export default function AirdropForm({
           large
           onChange={(e) => setAmounts(e.target.value)}
         />
+
+        <div className="rounded-lg border border-zinc-300 bg-white p-4">
+          <h3 className="mb-3 text-sm font-medium text-zinc-900">
+            Transaction Details
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-600">Token Name:</span>
+              <span className="font-mono text-zinc-900">
+                {tokenData?.[1]?.result as string}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-600">Amount (wei):</span>
+              <span className="font-mono text-zinc-900">{total}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-600">Amount (tokens):</span>
+              <span className="font-mono text-zinc-900">
+                {formatTokenAmount(total, tokenData?.[0]?.result as number)}
+              </span>
+            </div>
+          </div>
+        </div>
 
         {isUnsafeMode && (
           <div className="mb-4 flex items-center justify-between rounded-lg bg-red-50 p-4 text-red-600">
