@@ -2,7 +2,7 @@
 import { chainsToTSender, erc20Abi, tsenderAbi } from "@/constants"
 import { calculateTotal } from "@/utils"
 import { readContract, waitForTransactionReceipt } from "@wagmi/core"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CgSpinner } from "react-icons/cg"
 
 import { useConnectModal } from "@rainbow-me/rainbowkit"
@@ -16,7 +16,14 @@ import {
 } from "wagmi"
 import InputField from "./ui/InputField"
 
-export default function AirdropForm() {
+type AirdropFormProps = {
+  isUnsafeMode: boolean
+  onModeChange: (unsafe: boolean) => void
+}
+export default function AirdropForm({
+  isUnsafeMode,
+  onModeChange,
+}: AirdropFormProps) {
   const [tokenAddress, setTokenAddress] = useState(
     "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
   )
@@ -27,7 +34,7 @@ export default function AirdropForm() {
   const [hasEnoughTokens, setHasEnoughTokens] = useState(true)
   const chainId = useChainId()
   const config = useConfig()
-  const { address, isConnected, isDisconnected } = useAccount()
+  const { address, isConnected } = useAccount()
   const { data: tokenData } = useReadContracts({
     contracts: [
       {
@@ -64,9 +71,6 @@ export default function AirdropForm() {
   })
   const { openConnectModal } = useConnectModal()
 
-  const [isReadyToProceed, setIsReadyToProceed] = useState(false)
-  const alreadyRequestedRef = useRef(false)
-
   const total: number = useMemo(() => calculateTotal(amounts), [amounts])
 
   async function getApprovedAmount(
@@ -88,20 +92,6 @@ export default function AirdropForm() {
   }
 
   async function handleSubmit() {
-    if (!address) {
-      // only open once
-      if (!alreadyRequestedRef.current) {
-        alreadyRequestedRef.current = true
-        openConnectModal?.()
-        setIsReadyToProceed(true)
-      }
-      return // stop here and wait for user to connect
-    }
-
-    await proceedAfterConnection()
-  }
-
-  async function proceedAfterConnection() {
     const tSenderAddress = chainsToTSender[chainId]["tsender"]
     const approvedAmount = await getApprovedAmount(tSenderAddress)
     console.log(approvedAmount)
@@ -175,19 +165,6 @@ export default function AirdropForm() {
   }
 
   useEffect(() => {
-    if (isConnected && isReadyToProceed) {
-      proceedAfterConnection()
-    }
-  }, [isConnected, isReadyToProceed])
-
-  useEffect(() => {
-    if (isDisconnected) {
-      alreadyRequestedRef.current = false
-      setIsReadyToProceed(false)
-    }
-  }, [isDisconnected])
-
-  useEffect(() => {
     if (isConfirmed) {
       console.log("is confirmed")
       setTimeout(() => {
@@ -233,11 +210,10 @@ export default function AirdropForm() {
       />
 
       <button
-        className={`relative mt-4 flex w-full cursor-pointer items-center justify-center rounded-[9px] border py-3 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 ${
-          // isUnsafeMode
-          //   ? "border-red-500 bg-red-500 hover:bg-red-600"
-          //   : "border-blue-500 bg-blue-500 hover:bg-blue-600"
-          "bg-amber-200"
+        className={`relative mt-4 flex w-full cursor-pointer items-center justify-center rounded-[9px] border py-3 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-400 ${
+          isUnsafeMode
+            ? "border-red-500 bg-red-500 hover:bg-red-600"
+            : "bg-blue-500 hover:bg-blue-600"
         } ${!hasEnoughTokens && tokenAddress ? "cursor-not-allowed opacity-50" : ""}`}
         onClick={handleSubmit}
         disabled={
@@ -248,16 +224,13 @@ export default function AirdropForm() {
           (!hasEnoughTokens && tokenAddress !== "")
         }
       >
-        {
-          isPending || error || isConfirming
-            ? getButtonContent()
-            : !hasEnoughTokens && tokenAddress
-              ? "Insufficient token balance"
-              : "Test"
-          // isUnsafeMode
-          //     ? "Send Tokens (Unsafe)"
-          //     : "Send Tokens"
-        }
+        {isPending || error || isConfirming
+          ? getButtonContent()
+          : !hasEnoughTokens && tokenAddress
+            ? "Insufficient token balance"
+            : isUnsafeMode
+              ? "Send Tokens (Unsafe)"
+              : "Send Tokens"}
       </button>
     </div>
   )
