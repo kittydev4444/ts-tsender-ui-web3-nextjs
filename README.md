@@ -55,4 +55,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 [address(a), address(b), address(c)]
 [100, 200, 300]
 
-4. Deploy to fleek
+4.  e2e testing
+    1. When we connect, we see the form
+    2. When disconnected, we don't
+5.  Deploy to fleek
