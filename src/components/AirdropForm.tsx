@@ -25,13 +25,9 @@ export default function AirdropForm({
   isUnsafeMode,
   onModeChange,
 }: AirdropFormProps) {
-  const [tokenAddress, setTokenAddress] = useState(
-    "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  )
-  const [recipients, setRecipients] = useState(
-    "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-  )
-  const [amounts, setAmounts] = useState("1000000000000000000")
+  const [tokenAddress, setTokenAddress] = useState("")
+  const [recipients, setRecipients] = useState("")
+  const [amounts, setAmounts] = useState("")
   const [hasEnoughTokens, setHasEnoughTokens] = useState(true)
   const chainId = useChainId()
   const config = useConfig()
@@ -187,6 +183,28 @@ export default function AirdropForm({
       setHasEnoughTokens(true)
     }
   }, [tokenAddress, total, tokenData])
+
+  useEffect(() => {
+    const savedTokenAddress = localStorage.getItem("tokenAddress")
+    const savedRecipients = localStorage.getItem("recipients")
+    const savedAmounts = localStorage.getItem("amounts")
+
+    if (savedTokenAddress) setTokenAddress(savedTokenAddress)
+    if (savedRecipients) setRecipients(savedRecipients)
+    if (savedAmounts) setAmounts(savedAmounts)
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem("tokenAddress", tokenAddress)
+  }, [tokenAddress])
+
+  useEffect(() => {
+    localStorage.setItem("recipients", recipients)
+  }, [recipients])
+
+  useEffect(() => {
+    localStorage.setItem("amounts", amounts)
+  }, [amounts])
 
   return (
     <div
