@@ -39,9 +39,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 # What we going to do is
 
-1. Create a basic react/nextjs application
-2. Connect our wallet, with a nicer connect application
-3. Implement this function
+1. Create a basic react/nextjs application ✅
+2. Connect our wallet, with a nicer connect application ✅
+3. Implement this function ✅
 
 ```javascript
     function airdropERC20(
@@ -49,13 +49,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
         address[] calldata recipients,
         uint256[] calldata amounts,
         uint256 totalAmount
-    ) external
+    )
 ```
 
 [address(a), address(b), address(c)]
 [100, 200, 300]
 
-4.  e2e testing
+4.  e2e testing ✅
     1. When we connect, we see the form
     2. When disconnected, we don't
-5.  Deploy to fleek
+5.  Deploy to Vercel ✅
